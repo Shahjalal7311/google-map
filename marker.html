@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Street View side-by-side</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map, #pano {
+        float: left;
+        height: 100%;
+        width: 45%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="pano"></div>
+    <script>
+	
+      function initialize() {
+        var fenway = {lat: 42.345573, lng: -71.098326};
+        var map = new google.maps.Map(document.getElementById('map'), {
+          center: fenway,
+          zoom: 14
+        });
+		
+		var marker = new google.maps.Marker({
+				position: fenway,
+				title: 'Point A',
+				map: map,
+				draggable: true
+			});
+				
+        var panorama = new google.maps.StreetViewPanorama(
+            document.getElementById('pano'), {
+              position: fenway,
+              pov: {
+                heading: 34,
+                pitch: 10
+              }
+            });
+        map.setStreetView(panorama);
+		
+		updateMarkerPosition(latLng);
+		geocodePosition(latLng);
+
+		// Add dragging event listeners.
+		google.maps.event.addListener(marker, 'dragstart', function () {
+			updateMarkerAddress('Dragging...');
+		});
+
+		google.maps.event.addListener(marker, 'drag', function () {
+			updateMarkerStatus('Dragging...');
+			updateMarkerPosition(marker.getPosition());
+		});
+
+		google.maps.event.addListener(marker, 'dragend', function () {
+			updateMarkerStatus('Drag ended');
+			geocodePosition(marker.getPosition());
+		});
+      }
+	  
+    </script>
+	<div id="infoPanel">
+            <b>Marker status:</b>
+            <div id="markerStatus"><i>Click and drag the marker.</i></div>
+            <b>Current position:</b>
+            <div id="info"></div>
+            <input type="text" class="map_lat" />
+            <input type="text" class="map_lng" /><br>
+            <b>Closest matching address:</b>
+            <div id="address"></div>
+        </div>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAXwCitw_CfwbSupNOHHyOkqrn8mNFlneA&callback=initialize">
+    </script>
+  </body>
+</html>

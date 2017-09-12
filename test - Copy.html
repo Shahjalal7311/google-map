@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Place searches</title>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+        <meta charset="utf-8">
+        <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #map {
+                float: left;
+                width:  65%;
+                height: 70%;
+            }
+            #map_menu{ width: 35%; height: 70%; float: left; padding: 0; margin: 0;}
+            #map_menu ul{ list-style: none;}
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+        <script>
+            // This example requires the Places library. Include the libraries=places
+            // parameter when you first load the API. For example:
+            var map;
+            var infowindow;
+            var globalLocation;
+
+            $(document).ready(function () {
+                $("ul#mapid li").click(function () {
+                    var geocoder = new google.maps.Geocoder();
+                    window.val = $(this).attr('val');
+                    geocoder.geocode({'address': '16 Indira Rd Dhaka 1215'}, function (results, status)
+                    {
+
+                        if (status == google.maps.GeocoderStatus.OK)
+                        {
+                            var optionArr = [$(this).attr('val')];
+                            // alert($(this).attr('val'));
+                            window.address = results[0].formatted_address;
+                            tMap(results[0].geometry.location, optionArr);
+
+                        } else
+                        {
+                            alert("Geocode was not successful for the following reason: " + status);
+                        }
+                    });
+
+
+                });
+            });
+
+
+
+            function initMap() {
+
+                var geocoder = new google.maps.Geocoder();
+                geocoder.geocode({'address': '16 Indira Rd Dhaka 1215'}, function (results, status)
+                {
+
+                    if (status == google.maps.GeocoderStatus.OK)
+                    {
+                        var optionArr = ['hospital', 'bank', 'atm', 'school', 'place_of_worship', 'bus_station', 'shopping_mall'];
+                        window.address = results[0].formatted_address;
+                        tMap(results[0].geometry.location, optionArr);
+
+                    } else
+                    {
+                        alert("Geocode was not successful for the following reason: " + status);
+                    }
+                });
+
+            }
+
+
+            function tMap(location, tttt) {
+                var pyrmont = {lat: location.lat(), lng: location.lng()}; //(23.810332,90.412518);
+                window.globalLocation = pyrmont;
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: pyrmont,
+                    zoom: 15
+                });
+
+                var marker2 = new google.maps.Marker({
+                    position: pyrmont,
+                    map: map,
+                    title: address
+                });
+
+                infowindow = new google.maps.InfoWindow();
+                var service = new google.maps.places.PlacesService(map);
+
+
+
+
+                var optionArr = []
+                optionArr = {
+                    type: [tttt],
+                    location: pyrmont,
+                    radius: 1000,
+                }
+                for (var i = 0; i < optionArr['type'].length; i++) {
+                    var ss = service.nearbySearch({
+                        location: optionArr['location'],
+                        radius: optionArr['radius'],
+                        type: optionArr['type'][i],
+                    }, callback);
+                }
+
+                // alert(data)
+
+                //        service.nearbySearch({
+                //          location: pyrmont,
+                //          radius: 5000,
+                //          type: ['hospital']
+                //        }, callback);
+
+            }
+
+
+            function callback(results, status) {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    for (var i = 0; i < results.length; i++) {
+                        createMarker(results[i]);
+                    }
+                }
+            }
+            var killo111;
+            function createMarker(place) {
+
+
+
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: place.geometry.location,
+                    icon: new google.maps.MarkerImage(
+                            place.icon, // my 16x48 sprite with 3 circular icons
+                            new google.maps.Size(20, 20), // desired size
+                            new google.maps.Point(0, 0), // offset within the scaled sprite
+                            new google.maps.Point(0, 0), // anchor point is half of the desired size
+                            new google.maps.Size(20, 20) // scaled size of the entire sprite
+                            ),
+                });
+
+
+               // console.log(place);
+                google.maps.event.addListener(marker, 'click', function () {
+                    var killo = showMap(place.geometry.location);
+                    var location = parameter("https://maps.googleapis.com/maps/api/distancematrix/json?origins=Vancouver+BC|Seattle&destinations=San+Francisco|Victoria+BC&mode=AIzaSyAMCde7FCG4USIO-qwM8tXaUVvNS8MApHU");
+                    console.log(location);
+                    var directionsService = new google.maps.DirectionsService();
+                    var request = {
+                        origin: '16 Indira Rd Dhaka 1215', // a city, full address, landmark etc
+                        destination: place.vicinity,
+                        travelMode: google.maps.DirectionsTravelMode.DRIVING
+                    };
+                   // console.log(place.vicinity);
+                    directionsService.route(request, function (response, status) {
+                        if (status == google.maps.DirectionsStatus.OK) {
+                            window.killo111 = response.routes[0].legs[0].distance.value;
+                            // console.log(killo111);
+                            //alert( response.routes[0].legs[0].distance.value ); // the distance in metres
+                        }
+                    });
+
+
+                    //console.log(killo111);
+                    infowindow.setContent(place.name + '<br>' + place.vicinity + '<br>' + killo);
+                    infowindow.open(map, this);
+                });
+            }
+
+            function parameter(sParam)
+            {
+                //var sPageURL = window.load(sParam);
+              $.get(sParam, function(data){
+                    alert("Data: " + data);
+                  });
+               // return  data;
+            }
+
+            // creates and shows the map
+            function showMap(location2)
+            {
+                // alert(location);
+                var location1 = globalLocation.lat;
+                var location11 = globalLocation.lng;
+                // center of the map (compute the mean value between the two locations)
+                //latlng = new google.maps.LatLng((location1.lat()+location2.lat())/2,(location1.lng()+location2.lng())/2);
+
+                latlng = new google.maps.LatLng((location1 + location2.lat()) / 2,
+                        (location11 + location2.lng()) / 2);
+
+                // compute distance between the two points
+                var R = 6371;
+//		var dLat = toRad(location2.lat()-location1.lat);
+//		var dLon = toRad(location2.lng()-location1.lng()); 
+
+                var dLat = toRad(location2.lat() - location1);
+                var dLon = toRad(location2.lng() - location11);
+
+                //var dLat1 = toRad(location1.lat());
+                var dLat1 = toRad(location1);
+                var dLat2 = toRad(location2.lat());
+
+                var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                        Math.cos(dLat1) * Math.cos(dLat1) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                var d = R * c;
+
+
+                var distance = d.toFixed(2) + ' Km';
+                return distance;
+            }
+            function toRad(deg)
+            {
+                return deg * Math.PI / 180;
+            }
+        </script>
+    </head>
+    <body>
+        <br>
+        <div id="map" class=""></div>
+        <div class="map_menu" id="map_menu">
+            <ul id="mapid" style=" margin: 0; padding: 0;">
+                <li val="hospital"> HOSPITAL </li>
+                <li val="bank"> bank </li>
+                <li val="atm"> atm </li>
+                <li val="school"> school </li>
+                <li val="bus_station"> Bus Station </li>
+                <li val="shopping_mall"> Shopping Mall </li>
+            </ul>
+        </div>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAXwCitw_CfwbSupNOHHyOkqrn8mNFlneA&libraries=places&callback=initMap" async defer></script>
+    </body>
+</html>
